@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase, supabaseConfigured } from './lib/supabase';
 import { getMe, registerLogout } from './services/api';
-import App from './App';
 import LoginPage from './pages/LoginPage';
-import ChangePasswordPage from './pages/ChangePasswordPage';
 import SetupPage from './pages/SetupPage';
+
+// O catálogo só é baixado depois do login: a tela de entrada abre mais rápido.
+const loadApp = () => import('./App');
+const App = lazy(loadApp);
+const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
+
+const Splash = () => (
+  <div className="splash" aria-busy="true">
+    <span className="brand-mark">A</span>
+  </div>
+);
 
 // De quanto em quanto tempo o acesso é conferido de novo (bloqueio/expiração).
 const RECHECK_MS = 5 * 60 * 1000;
@@ -75,6 +84,11 @@ export default function Root() {
     return () => clearInterval(timer);
   }, [status]);
 
+  // Enquanto a pessoa digita a senha, o catálogo já vai sendo baixado.
+  useEffect(() => {
+    if (status === 'deslogado') loadApp();
+  }, [status]);
+
   const handleLogout = useCallback(async () => {
     await registerLogout();
     await signOutLocal(null);
@@ -82,21 +96,19 @@ export default function Root() {
 
   if (!supabaseConfigured) return <SetupPage />;
 
-  if (status === 'carregando') {
-    return (
-      <div className="splash" aria-busy="true">
-        <span className="brand-mark">A</span>
-      </div>
-    );
-  }
+  if (status === 'carregando') return <Splash />;
 
   if (status === 'deslogado') {
     return <LoginPage notice={notice} onLoggedIn={() => loadMe('login')} />;
   }
 
-  if (status === 'trocar-senha') {
-    return <ChangePasswordPage me={me} onDone={() => loadMe()} onLogout={handleLogout} />;
-  }
-
-  return <App me={me} onLogout={handleLogout} />;
+  return (
+    <Suspense fallback={<Splash />}>
+      {status === 'trocar-senha' ? (
+        <ChangePasswordPage me={me} onDone={() => loadMe()} onLogout={handleLogout} />
+      ) : (
+        <App me={me} onLogout={handleLogout} />
+      )}
+    </Suspense>
+  );
 }

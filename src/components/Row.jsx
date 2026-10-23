@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import MovieCard from './MovieCard';
 import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
 // Carrossel horizontal. `ranked` exibe o estilo "Top 10" com números grandes.
-export default function Row({ title, subtitle, items, ranked = false, ...cardProps }) {
+function Row({ title, subtitle, items, ranked = false, ...cardProps }) {
   const trackRef = useRef(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -77,3 +77,5 @@ export default function Row({ title, subtitle, items, ranked = false, ...cardPro
     </section>
   );
 }
+
+export default memo(Row);

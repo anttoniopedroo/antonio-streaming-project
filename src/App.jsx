@@ -59,15 +59,23 @@ export default function App({ me, onLogout }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const showToast = (message) => setToast({ message, id: Date.now() });
+  // Funções estáveis (useCallback): os cards memorizados só re-renderizam
+  // quando os próprios dados mudam, não a cada toast ou tecla digitada.
+  const showToast = useCallback((message) => setToast({ message, id: Date.now() }), []);
 
-  const handlePlay = (item) =>
-    showToast(`▶  "${item.title}": o player será liberado quando a API for conectada.`);
+  const handlePlay = useCallback(
+    (item) => showToast(`▶  "${item.title}": o player será liberado quando a API for conectada.`),
+    [showToast]
+  );
 
-  const handleToggleList = (item) => {
-    const added = myList.toggle(item.id);
-    showToast(added ? `"${item.title}" adicionado à Minha Lista` : `"${item.title}" removido da Minha Lista`);
-  };
+  const { toggle: toggleList, has: isInList } = myList;
+  const handleToggleList = useCallback(
+    (item) => {
+      const added = toggleList(item.id);
+      showToast(added ? `"${item.title}" adicionado à Minha Lista` : `"${item.title}" removido da Minha Lista`);
+    },
+    [toggleList, showToast]
+  );
 
   const handleNavigate = (id) => {
     setView(id);
@@ -107,12 +115,10 @@ export default function App({ me, onLogout }) {
 
   const myListItems = myList.ids.map((id) => catalog.find((t) => t.id === id)).filter(Boolean);
 
-  const cardProps = {
-    onOpen: setSelected,
-    onPlay: handlePlay,
-    isInList: myList.has,
-    onToggleList: handleToggleList,
-  };
+  const cardProps = useMemo(
+    () => ({ onOpen: setSelected, onPlay: handlePlay, isInList, onToggleList: handleToggleList }),
+    [handlePlay, isInList, handleToggleList]
+  );
 
   const renderPage = () => {
     if (loading) {

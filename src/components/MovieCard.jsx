@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import Artwork from './Artwork';
 import Meta from './Meta';
 import { CheckIcon, ChevronDownIcon, PlayIcon, PlusIcon } from './Icons';
 
-export default function MovieCard({ item, onOpen, onPlay, isInList, onToggleList, variant = 'landscape' }) {
+function MovieCard({ item, onOpen, onPlay, isInList, onToggleList, variant = 'landscape' }) {
   const inList = isInList(item.id);
   const stop = (fn) => (e) => {
     e.stopPropagation();
@@ -54,3 +55,5 @@ export default function MovieCard({ item, onOpen, onPlay, isInList, onToggleList
     </article>
   );
 }
+
+export default memo(MovieCard);

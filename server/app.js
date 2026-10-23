@@ -9,6 +9,8 @@
 // =========================================================
 
 import express from 'express';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import { apiConfigured, authConfigured } from './config.js';
 import { admin } from './supabase.js';
 import { logAccess, requireUser, validatePassword } from './auth.js';
@@ -16,8 +18,37 @@ import { mockTitles, proxyToApi, searchMocks } from './catalog.js';
 
 export const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', 'loopback'); // IP real do visitante vindo pelo Vite
+// IP real do visitante: atrás do Vite (local) ou do proxy da Vercel (produção).
+app.set('trust proxy', process.env.VERCEL ? 1 : 'loopback');
+
+// Cabeçalhos de segurança nas respostas da API.
+app.use(helmet());
 app.use(express.json({ limit: '10kb' }));
+
+// Limite de requisições por IP (proteção contra abuso e raspagem do catálogo).
+const tooMany = { code: 'muitas_requisicoes', error: 'Muitas requisições. Aguarde um pouco e tente de novo.' };
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: tooMany,
+});
+const sensitiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: tooMany,
+});
+app.use('/api', apiLimiter);
+app.use('/api/change-password', sensitiveLimiter);
+
+// Respostas com dados de usuário nunca ficam em cache de navegador/proxy.
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 
 // Status do back-end (nunca revela chaves).
 app.get('/api/health', (_req, res) => {
@@ -80,7 +111,8 @@ app.get('/api/search', requireUser(), async (req, res) => {
   return proxyToApi(req, res, `/titles/search?q=${encodeURIComponent(q)}`);
 });
 
-// Demais caminhos: repassa para a API autorizada (só leitura, só logado).
+// Demais caminhos: repassa para a API autorizada (só leitura, só logado,
+// só caminhos permitidos em API_ALLOWED_PATHS).
 app.use('/api', requireUser(), async (req, res) => {
   if (req.method !== 'GET') {
     return res.status(405).json({ code: 'metodo_nao_permitido', error: 'Método não permitido.' });

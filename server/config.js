@@ -28,6 +28,15 @@ export const config = {
     header: env.API_KEY_HEADER || 'Authorization',
     prefix: env.API_KEY_PREFIX || '',
     queryParam: env.API_KEY_QUERY_PARAM || '',
+    // Únicos caminhos da API externa que o site pode chamar (separados por vírgula).
+    // Impede que alguém use a sua chave em outros endpoints do provedor (conta, cobrança...).
+    allowedPaths: (env.API_ALLOWED_PATHS || '/titles')
+      .split(',')
+      .map((p) => p.trim().replace(/\/+$/, ''))
+      .filter(Boolean),
+    // Respostas da API ficam guardadas por este tempo (economiza a cota da chave).
+    cacheSeconds: Number(env.API_CACHE_SECONDS ?? 60),
+    maxResponseBytes: 5 * 1024 * 1024,
   },
   supabase: {
     url: trimSlash(env.SUPABASE_URL),

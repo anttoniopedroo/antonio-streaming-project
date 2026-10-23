@@ -1,10 +1,11 @@
 // Testa as regras de acesso do back-end (server/app.js) contra um Supabase falso.
 // Rode com: npm run test:auth
-import './fake-supabase.mjs';
+process.env.FAKE_SUPABASE_PORT = '0';
+const { tokenOf, url: fakeUrl, close: closeFake } = await import('./fake-supabase.mjs');
 
 // Antes de importar o app: aponta para o Supabase falso e garante modo demonstração.
 Object.assign(process.env, {
-  SUPABASE_URL: 'http://127.0.0.1:5056',
+  SUPABASE_URL: fakeUrl,
   SUPABASE_SECRET_KEY: 'chave-falsa-de-teste',
   API_BASE_URL: '',
   API_KEY: '',
@@ -15,9 +16,7 @@ const server = app.listen(0, '127.0.0.1');
 await new Promise((r) => server.once('listening', r));
 const base = `http://127.0.0.1:${server.address().port}/api`;
 
-// Tokens do Supabase falso: a "chave" do usuário dentro de um JWT de mentira.
-const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-const token = (key) => `${b64({ alg: 'HS256' })}.${b64({ key })}.sig`;
+const token = tokenOf;
 
 let fails = 0;
 const ok = (cond, msg) => {
@@ -82,7 +81,7 @@ r = await call('/logout', { user: 'ok', method: 'POST' });
 ok(r.status === 200, 'logout registrado');
 
 // Registros gravados no "banco" falso
-const log = await (await fetch('http://127.0.0.1:5056/__log')).json();
+const log = await (await fetch(`${fakeUrl}/__log`)).json();
 const eventos = log.filter((e) => e.tipo === 'access_log').map((e) => e.body.evento);
 for (const ev of ['bloqueado', 'expirado', 'troca_senha', 'login', 'logout']) {
   ok(eventos.includes(ev), `access_logs registrou "${ev}"`);
@@ -91,5 +90,6 @@ ok(log.some((e) => e.tipo === 'update_profile' && e.body.trocar_senha === false)
 ok(log.some((e) => e.tipo === 'update_profile' && e.body.ultimo_acesso), 'login atualiza ultimo_acesso');
 
 server.close();
+closeFake();
 console.log(fails ? `\n${fails} FALHA(S)` : '\nTodos os testes passaram.');
 process.exit(fails ? 1 : 0);

@@ -21,7 +21,7 @@
 
   /* Tipografia */
   --font-display: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Layout */
   --gutter: clamp(16px, 4vw, 60px);

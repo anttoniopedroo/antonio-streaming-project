@@ -4,9 +4,25 @@ import { admin } from './supabase.js';
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
+// Tentativas repetidas de quem está bloqueado/expirado são registradas
+// no máximo uma vez a cada 10 minutos por pessoa (evita encher a tabela).
+const THROTTLED_EVENTS = new Set(['bloqueado', 'expirado']);
+const THROTTLE_MS = 10 * 60 * 1000;
+const lastLogged = new Map();
+
+function shouldThrottle(userId, evento) {
+  if (!THROTTLED_EVENTS.has(evento) || !userId) return false;
+  const key = `${userId}:${evento}`;
+  const now = Date.now();
+  if (now - (lastLogged.get(key) ?? 0) < THROTTLE_MS) return true;
+  lastLogged.set(key, now);
+  if (lastLogged.size > 5000) lastLogged.clear();
+  return false;
+}
+
 // Registra um evento em access_logs (login, logout, troca_senha, bloqueado, expirado).
 export async function logAccess(req, { userId = null, email = null, evento }) {
-  if (!admin) return;
+  if (!admin || shouldThrottle(userId, evento)) return;
   const { error } = await admin.from('access_logs').insert({
     user_id: userId,
     email,
@@ -33,11 +49,14 @@ export function requireUser({ allowPasswordChange = false } = {}) {
       return res.status(401).json({ code: 'sem_sessao', error: 'Faça login para continuar.' });
     }
 
-    const { data, error } = await admin.auth.getUser(token);
-    if (error || !data?.user) {
+    // getClaims confere a assinatura do token localmente (chaves assimétricas do
+    // Supabase, com cache) e só consulta o servidor de Auth para chaves antigas.
+    const { data, error } = await admin.auth.getClaims(token);
+    const claims = data?.claims;
+    if (error || !claims?.sub || claims.role !== 'authenticated') {
       return res.status(401).json({ code: 'sessao_invalida', error: 'Sua sessão expirou. Entre novamente.' });
     }
-    const user = data.user;
+    const user = { id: claims.sub, email: claims.email };
 
     const { data: profile, error: profileError } = await admin
       .from('profiles')

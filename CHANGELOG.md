@@ -3,6 +3,27 @@
 Cada commit no GitHub sobe a versão (V1.2, V1.3, ...). A V2.0 será a versão com a API real conectada.
 A versão fica em um único lugar: `version` no `package.json`.
 
+## V1.4
+
+Segurança (referência: OWASP API Security Top 10 2023):
+- Proxy da API só aceita caminhos permitidos (`API_ALLOWED_PATHS`, padrão `/titles`): ninguém consegue usar a sua chave em outros endpoints do provedor (conta, cobrança...).
+- Redirecionamentos da API não são seguidos (a chave não vaza para outro host); respostas que não são JSON ou acima de 5 MB são recusadas.
+- Cache das respostas da API (`API_CACHE_SECONDS`, padrão 60 s): economiza a cota da chave.
+- Limite de requisições por IP (120/min na API, 10 a cada 15 min na troca de senha).
+- Cabeçalhos de segurança (helmet) e `Cache-Control: no-store` nas respostas com dados de usuário.
+- Tentativas de bloqueados/expirados registradas no máximo 1 vez a cada 10 min por pessoa.
+- Vite atualizado para a 8.x: corrige a falha do servidor de desenvolvimento (GHSA-67mh-4wv8-2f99). `npm audit`: 0 vulnerabilidades.
+
+Desempenho:
+- Token conferido com `getClaims` (verificação local com as chaves assimétricas do Supabase), sem ida ao servidor de Auth a cada requisição.
+- Código inicial do site: 114 KB -> 52 KB (gzip). O catálogo é baixado só depois do login, em segundo plano enquanto a pessoa digita a senha.
+- Cards e fileiras memorizados: não re-renderizam a cada toast ou tecla digitada.
+- Fontes servidas pelo próprio site (sem Google Fonts): menos uma conexão externa e o IP dos visitantes não vai para o Google.
+
+Outros:
+- `npm run dev:demo`: site completo com um Supabase falso, para ver e testar sem configurar nada.
+- `npm run test:proxy`: testa todas as proteções acima.
+
 ## V1.3
 
 - `supabase/setup.sql` reforçado: além do RLS, as contas públicas (anon/authenticated) perdem qualquer permissão nas tabelas de controle, e a função do gatilho não pode ser chamada pela API.

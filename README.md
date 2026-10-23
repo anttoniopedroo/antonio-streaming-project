@@ -13,6 +13,14 @@ npm run dev:all
 
 Abre em http://localhost:5173. Sem configuração, o site mostra a tela "Login não configurado".
 
+Para ver o site funcionando sem configurar nada, use o modo demonstração (Supabase falso local):
+
+```powershell
+npm run dev:demo
+```
+
+Contas de teste (senha `Senha123`): `ok@teste.com` (liberada), `novo@teste.com` (primeiro acesso), `bloq@teste.com` (bloqueada), `exp@teste.com` (expirada).
+
 ## Configurar o login (Supabase)
 
 1. Crie um projeto gratuito em https://supabase.com.
@@ -43,11 +51,16 @@ Depois de configurar, rode `npm run verificar`: ele confere se o cadastro públi
 npm test
 ```
 
-`test:db` valida o `supabase/setup.sql` num Postgres real (PGlite). `test:auth` testa as regras de acesso do back-end contra um Supabase falso.
+`test:db` valida o `supabase/setup.sql` num Postgres real (PGlite). `test:auth` testa as regras de acesso do back-end contra um Supabase falso. `test:proxy` testa as proteções da chave da API.
 
 ## Conectar a sua API do catálogo
 
 Preencha `API_BASE_URL` e `API_KEY` em `server/chave_api.env`. Enquanto estiver vazio, o back-end entrega o catálogo de demonstração (`server/data/mockTitles.js`).
+
+Proteções da chave (também em `server/chave_api.env`):
+- `API_ALLOWED_PATHS`: únicos caminhos da API que o site pode chamar (padrão `/titles`).
+- `API_CACHE_SECONDS`: tempo de cache das respostas (padrão 60).
+- Redirecionamentos não são seguidos; respostas que não são JSON ou acima de 5 MB são recusadas; limite de 120 requisições por minuto por IP.
 
 `server/chave_api.env` e `.env` estão no `.gitignore` e nunca devem ser enviados ao repositório.
 

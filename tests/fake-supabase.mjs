@@ -10,11 +10,16 @@ const users = {
 };
 const byId = Object.fromEntries(Object.values(users).map((u) => [u.id, u]));
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-const tokenOf = (key) => `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: users[key].id, email: users[key].email, key, exp: Math.floor(Date.now() / 1000) + 3600 })}.sig`;
+// Token no formato de um JWT do Supabase (assinatura falsa; o "servidor" valida pela chave).
+export const tokenOf = (key) => {
+  const u = users[key] ?? { id: '99999999-9999-9999-9999-999999999999', email: 'ninguem@teste.com' };
+  const now = Math.floor(Date.now() / 1000);
+  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: u.id, email: u.email, role: 'authenticated', aud: 'authenticated', key, iat: now, exp: now + 3600 })}.sig`;
+};
 const keyOfToken = (t) => { try { return JSON.parse(Buffer.from(t.split('.')[1], 'base64url')).key; } catch { return t; } };
 const log = [];
 
-http
+const server = http
   .createServer((req, res) => {
     let body = '';
     req.on('data', (c) => (body += c));
@@ -64,4 +69,10 @@ http
       send(404, { error: 'nao simulado: ' + req.method + ' ' + url.pathname });
     });
   })
-  .listen(5056, '127.0.0.1');
+  .listen(Number(process.env.FAKE_SUPABASE_PORT ?? 5056), '127.0.0.1');
+
+// Testes usam FAKE_SUPABASE_PORT=0 (porta livre aleatória) para não colidir com o dev:demo.
+export const ready = new Promise((r) => server.once('listening', r));
+await ready;
+export const url = `http://127.0.0.1:${server.address().port}`;
+export const close = () => server.close();
