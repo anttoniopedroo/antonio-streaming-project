@@ -1,0 +1,12 @@
+# Texto: o git normaliza as quebras de linha.
+* text=auto
+
+# Binários: nunca converter (evita corromper PDFs, imagens e fontes no Windows).
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary

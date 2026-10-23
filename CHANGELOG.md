@@ -3,6 +3,11 @@
 Cada commit no GitHub sobe a versão (V1.2, V1.3, ...). A V2.0 será a versão com a API real conectada.
 A versão fica em um único lugar: `version` no `package.json`.
 
+## V1.6
+
+- `.gitattributes`: PDFs, imagens e fontes marcados como binários, para o git nunca converter quebras de linha neles (evita PDF corrompido ao clonar no Windows).
+- Tutorial em PDF regerado com a versão atual.
+
 ## V1.5
 
 - Pronto para a Vercel (ainda não publicado):
