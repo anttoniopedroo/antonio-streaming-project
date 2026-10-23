@@ -3,6 +3,12 @@
 Cada commit no GitHub sobe a versão (V1.2, V1.3, ...). A V2.0 será a versão com a API real conectada.
 A versão fica em um único lugar: `version` no `package.json`.
 
+## V1.7
+
+- Queda de internet ou do servidor não desloga mais: aparece a tela "Algo deu errado" com "Tentar novamente", mantendo a sessão. Só 401/403 (sessão inválida, bloqueio, expiração) levam ao login.
+- Mensagens de erro de rede em português (antes: "Failed to fetch").
+- Minha Lista separada por conta: quem entra depois no mesmo navegador não vê a lista de outra pessoa. A lista global antiga (V1.1) é removida.
+
 ## V1.6
 
 - `.gitattributes`: PDFs, imagens e fontes marcados como binários, para o git nunca converter quebras de linha neles (evita PDF corrompido ao clonar no Windows).

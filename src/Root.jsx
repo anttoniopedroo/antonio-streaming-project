@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase, supabaseConfigured } from './lib/supabase';
-import { getMe, registerLogout } from './services/api';
+import { ApiError, getMe, registerLogout } from './services/api';
+import AuthLayout from './pages/AuthLayout';
 import LoginPage from './pages/LoginPage';
 import SetupPage from './pages/SetupPage';
 
@@ -20,7 +21,7 @@ const RECHECK_MS = 5 * 60 * 1000;
 
 // Porteiro do site: decide entre login, troca de senha e catálogo.
 export default function Root() {
-  const [status, setStatus] = useState('carregando'); // carregando | deslogado | trocar-senha | ok
+  const [status, setStatus] = useState('carregando'); // carregando | deslogado | trocar-senha | ok | erro
   const [me, setMe] = useState(null);
   const [notice, setNotice] = useState(null);
 
@@ -39,7 +40,15 @@ export default function Root() {
         setMe(data);
         setStatus(data.trocarSenha ? 'trocar-senha' : 'ok');
       } catch (err) {
-        await signOutLocal(err.message);
+        // Só desloga quando o servidor recusou o acesso (401/403).
+        // Falha de rede ou erro do servidor: mantém a sessão e oferece tentar de novo.
+        const denied = err instanceof ApiError && (err.status === 401 || err.status === 403);
+        if (denied) {
+          await signOutLocal(err.message);
+        } else {
+          setNotice(err.message);
+          setStatus('erro');
+        }
       }
     },
     [signOutLocal]
@@ -97,6 +106,23 @@ export default function Root() {
   if (!supabaseConfigured) return <SetupPage />;
 
   if (status === 'carregando') return <Splash />;
+
+  if (status === 'erro') {
+    return (
+      <AuthLayout>
+        <h1 className="auth-title">Algo deu errado</h1>
+        <p className="auth-subtitle">{notice}</p>
+        <div className="auth-form">
+          <button className="btn btn-auth" onClick={() => loadMe()}>
+            Tentar novamente
+          </button>
+        </div>
+        <button className="auth-link" type="button" onClick={handleLogout}>
+          Sair
+        </button>
+      </AuthLayout>
+    );
+  }
 
   if (status === 'deslogado') {
     return <LoginPage notice={notice} onLoggedIn={() => loadMe('login')} />;

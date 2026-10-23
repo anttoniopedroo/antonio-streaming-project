@@ -21,7 +21,7 @@ export default function App({ me, onLogout }) {
   const [results, setResults] = useState(null);
   const [selected, setSelected] = useState(null);
   const [toast, setToast] = useState(null);
-  const myList = useMyList();
+  const myList = useMyList(me?.email);
 
   const loadCatalog = useCallback(() => {
     setLoading(true);

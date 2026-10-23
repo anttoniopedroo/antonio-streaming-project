@@ -17,19 +17,29 @@ async function request(path, options = {}) {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch {
+    // Sem internet ou servidor fora do ar: não é problema de acesso, não desloga.
+    throw new ApiError(0, 'sem_conexao', 'Sem conexão com o servidor. Verifique a internet e tente de novo.');
+  }
 
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const error = new ApiError(response.status, body?.code, body?.error ?? `Erro ${response.status} em ${path}`);
+    const fallback =
+      response.status >= 500
+        ? 'O servidor não respondeu. Tente de novo em instantes.'
+        : `Erro ${response.status} em ${path}`;
+    const error = new ApiError(response.status, body?.code, body?.error ?? fallback);
     // Sessão inválida, conta bloqueada/expirada ou troca de senha pendente:
     // avisa o Root, que decide para qual tela mandar a pessoa.
     if (response.status === 401 || response.status === 403) {

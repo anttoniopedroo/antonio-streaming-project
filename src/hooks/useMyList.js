@@ -1,27 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'asp:my-list';
+// Uma lista por conta: quem entra depois no mesmo navegador não vê a lista de outra pessoa.
+const storageKey = (owner) => `asp:my-list:${(owner ?? 'anonimo').toLowerCase()}`;
 
-function readStored() {
+// Remove a lista global das versões antigas (V1.1), que era compartilhada entre contas.
+try {
+  localStorage.removeItem('asp:my-list');
+} catch {
+  // armazenamento indisponível
+}
+
+function readStored(owner) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(owner));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-// "Minha Lista" salva no navegador. Troque por chamadas à API quando houver login.
-export function useMyList() {
-  const [ids, setIds] = useState(readStored);
+// "Minha Lista" salva no navegador. Troque por chamadas à API quando houver API.
+export function useMyList(owner) {
+  const [ids, setIds] = useState(() => readStored(owner));
+
+  // Troca de conta sem recarregar a página: carrega a lista da nova conta.
+  useEffect(() => {
+    setIds(readStored(owner));
+  }, [owner]);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+      localStorage.setItem(storageKey(owner), JSON.stringify(ids));
     } catch {
       // armazenamento indisponível (aba anônima etc.): a lista vale só para a sessão
     }
-  }, [ids]);
+  }, [owner, ids]);
 
   const has = useCallback((id) => ids.includes(id), [ids]);
 
