@@ -1,56 +1,56 @@
-import { mockTitles } from '../data/mockTitles';
+import { supabase } from '../lib/supabase';
 
-// Defina VITE_API_BASE_URL=/api no arquivo .env para usar o back-end (server/index.js).
-// Enquanto estiver vazia, todas as funções retornam os mocks.
-// A chave da API NÃO fica aqui — ela fica no back-end, em server/chave_api.env.
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-export const USE_MOCKS = !BASE_URL;
+// Todas as chamadas vão para o back-end do projeto (server/app.js), que confere
+// o login, aplica as regras de acesso e só então entrega os dados.
+// Nenhuma chave secreta fica aqui: elas ficam em server/chave_api.env.
+const BASE_URL = '/api';
 
-const mockDelay = (data, ms = 400) =>
-  new Promise((resolve) => setTimeout(() => resolve(data), ms));
+export class ApiError extends Error {
+  constructor(status, code, message) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
 
-// Wrapper de fetch: centraliza headers, JSON e tratamento de erro.
 async function request(path, options = {}) {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
   const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
 
+  const body = await response.json().catch(() => null);
+
   if (!response.ok) {
-    throw new Error(`Erro ${response.status} em ${path}`);
+    const error = new ApiError(response.status, body?.code, body?.error ?? `Erro ${response.status} em ${path}`);
+    // Sessão inválida, conta bloqueada/expirada ou troca de senha pendente:
+    // avisa o Root, que decide para qual tela mandar a pessoa.
+    if (response.status === 401 || response.status === 403) {
+      window.dispatchEvent(new CustomEvent('asp:acesso-negado', { detail: error }));
+    }
+    throw error;
   }
-  return response.status === 204 ? null : response.json();
+  return body;
 }
 
-const normalize = (text) =>
-  text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// ---- Conta ----
+export const getMe = (evento) => request(evento ? `/me?evento=${evento}` : '/me');
 
-// ---- Endpoints (ajuste os caminhos conforme a sua API) ----
+export const changePassword = (novaSenha) =>
+  request('/change-password', { method: 'POST', body: JSON.stringify({ novaSenha }) });
 
-// Catálogo completo (filmes e séries).
-export async function getCatalog() {
-  if (USE_MOCKS) return mockDelay(mockTitles, 700);
-  return request('/titles');
-}
+export const registerLogout = () => request('/logout', { method: 'POST' }).catch(() => null);
 
-export async function getTitleById(id) {
-  if (USE_MOCKS) return mockDelay(mockTitles.find((t) => t.id === Number(id)) ?? null);
-  return request(`/titles/${id}`);
-}
+// ---- Catálogo (ajuste os caminhos da sua API em server/app.js) ----
+export const getCatalog = () => request('/catalog');
 
-// Busca por título, gênero ou elenco.
-export async function searchTitles(query) {
-  if (USE_MOCKS) {
-    const q = normalize(query);
-    const results = mockTitles.filter((t) =>
-      [t.title, t.director, ...t.genres, ...t.cast].some((field) => normalize(field).includes(q))
-    );
-    return mockDelay(results, 150);
-  }
-  return request(`/titles/search?q=${encodeURIComponent(query)}`);
-}
+export const getTitleById = (id) => request(`/titles/${encodeURIComponent(id)}`);
 
-export const api = { getCatalog, getTitleById, searchTitles };
+export const searchTitles = (query) => request(`/search?q=${encodeURIComponent(query)}`);

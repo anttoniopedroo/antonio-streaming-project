@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getCatalog, searchTitles, USE_MOCKS } from './services/api';
+import { getCatalog, searchTitles } from './services/api';
 import { useMyList } from './hooks/useMyList';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -11,7 +11,7 @@ import { HeroSkeleton, RowSkeleton } from './components/Skeletons';
 
 const VIEW_LABELS = { home: 'Início', filme: 'Filmes', serie: 'Séries' };
 
-export default function App() {
+export default function App({ me, onLogout }) {
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -224,13 +224,15 @@ export default function App() {
         query={query}
         onQueryChange={setQuery}
         myListCount={myList.ids.length}
+        me={me}
+        onLogout={onLogout}
       />
 
       <main>{renderPage()}</main>
 
       <Footer />
 
-      {USE_MOCKS && !loading && <div className="mock-flag">Modo demonstração · dados mockados</div>}
+      {me?.demo && !loading && <div className="mock-flag">Modo demonstração · dados mockados</div>}
 
       {selected && (
         <MovieModal

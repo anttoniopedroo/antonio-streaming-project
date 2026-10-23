@@ -1,3 +1,5 @@
+import { APP_FULL_NAME, APP_NAME, APP_VERSION } from '../version';
+
 const LINKS = [
   ['Central de ajuda', 'Termos de uso', 'Privacidade'],
   ['Conta', 'Dispositivos compatíveis', 'Preferências de cookies'],
@@ -10,8 +12,8 @@ export default function Footer() {
       <div className="footer-brand">
         <span className="brand-mark">A</span>
         <div>
-          <strong>ANTONIO STREAMING PROJECT</strong>
-          <span className="brand-version">V1.1</span>
+          <strong>{APP_NAME}</strong>
+          <span className="brand-version">{APP_VERSION}</span>
           <p>Projeto autoral de streaming. Catálogo fictício para demonstração.</p>
         </div>
       </div>
@@ -31,7 +33,7 @@ export default function Footer() {
       </div>
 
       <p className="footer-copy">
-        © {new Date().getFullYear()} ANTONIO STREAMING PROJECT V1.1. Todos os direitos reservados.
+        © {new Date().getFullYear()} {APP_FULL_NAME}. Todos os direitos reservados.
       </p>
     </footer>
   );

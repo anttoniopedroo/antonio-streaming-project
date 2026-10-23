@@ -83,6 +83,41 @@ export const ThumbUpIcon = (p) => (
     <path d="M7 10v10H4V10zM7 10l4-7a2 2 0 012 2.3L12.4 9H19a2 2 0 012 2.3l-1.2 7A2 2 0 0117.8 20H7" />
   </Svg>
 );
+export const MailIcon = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3.5 6.5L12 13l8.5-6.5" />
+  </Svg>
+);
+export const LockIcon = (p) => (
+  <Svg {...p}>
+    <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+    <path d="M8 10.5V7.5a4 4 0 018 0v3" />
+  </Svg>
+);
+export const EyeIcon = (p) => (
+  <Svg {...p}>
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Svg>
+);
+export const EyeOffIcon = (p) => (
+  <Svg {...p}>
+    <path d="M10.6 5.1A10.6 10.6 0 0112 5c6.4 0 10 7 10 7a17.6 17.6 0 01-3.2 4.2M6.6 6.6A17.4 17.4 0 002 12s3.6 7 10 7a9.9 9.9 0 005.4-1.6" />
+    <path d="M9.9 9.9a3 3 0 004.2 4.2M3 3l18 18" />
+  </Svg>
+);
+export const LogoutIcon = (p) => (
+  <Svg {...p}>
+    <path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 17l5-5-5-5M15 12H4" />
+  </Svg>
+);
+export const ShieldIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.4-7.5 9.5-4.3-1.1-7.5-4.9-7.5-9.5V6z" />
+    <path d="M9 12l2 2 4-4" />
+  </Svg>
+);
 export const VolumeIcon = (p) => (
   <Svg {...p}>
     <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
