@@ -1,7 +1,7 @@
 {
   "name": "catalogo-projeto",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,12 @@
     "preview": "vite preview",
     "server": "node --watch server/index.js",
     "dev:all": "concurrently -n site,api -c magenta,cyan \"npm:dev\" \"npm:server\"",
-    "admin:resetar-senha": "node server/scripts/resetar-senha.js"
+    "admin:resetar-senha": "node server/scripts/resetar-senha.js",
+    "test:db": "node tests/db.test.mjs",
+    "test:auth": "node tests/auth.test.mjs",
+    "test": "npm run test:db && npm run test:auth",
+    "admin:criar-usuario": "node server/scripts/criar-usuario.js",
+    "verificar": "node server/scripts/verificar.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -18,6 +23,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.11",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^10.0.6",
     "vite": "^5.4.11"

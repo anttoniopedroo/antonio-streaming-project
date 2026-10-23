@@ -35,6 +35,11 @@ create index if not exists access_logs_criado_em_idx on public.access_logs (cria
 alter table public.profiles    enable row level security;
 alter table public.access_logs enable row level security;
 
+-- Segunda camada: tira das contas públicas (anon/authenticated) qualquer permissão
+-- nestas tabelas. Mesmo que o RLS seja desligado por engano, o navegador não lê nada.
+revoke all on table public.profiles    from anon, authenticated;
+revoke all on table public.access_logs from anon, authenticated;
+
 -- Cria o perfil automaticamente quando você adiciona um usuário no painel.
 create or replace function public.handle_new_user()
 returns trigger
@@ -49,6 +54,9 @@ begin
   return new;
 end;
 $$;
+
+-- A função só deve rodar pelo gatilho, nunca chamada pela API.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created

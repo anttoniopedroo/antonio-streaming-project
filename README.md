@@ -32,7 +32,18 @@ Abre em http://localhost:5173. Sem configuração, o site mostra a tela "Login n
 | Data de expiração | Table Editor > `profiles` > coluna `expira_em` (vazio = sem expiração) |
 | Nome exibido | Table Editor > `profiles` > coluna `nome` |
 | Ver acessos | Table Editor > `access_logs` |
+| Criar pessoa já liberada | `npm run admin:criar-usuario -- email@exemplo.com SenhaInicial1 --nome "Maria" --dias 30` |
 | Redefinir senha | `npm run admin:resetar-senha -- email@exemplo.com SenhaTemporaria1` |
+
+Depois de configurar, rode `npm run verificar`: ele confere se o cadastro público está desligado, se a chave pública não acessa as tabelas de controle e se o gatilho funciona.
+
+## Testes
+
+```powershell
+npm test
+```
+
+`test:db` valida o `supabase/setup.sql` num Postgres real (PGlite). `test:auth` testa as regras de acesso do back-end contra um Supabase falso.
 
 ## Conectar a sua API do catálogo
 
