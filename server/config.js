@@ -8,10 +8,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // (a chave entra lá). Variáveis já definidas no ambiente — por exemplo,
 // no painel da Vercel — têm prioridade sobre o arquivo.
 const KEY_FILE = path.join(__dirname, 'chave_api.env');
+// Na Vercel as chaves vêm das Environment Variables do painel (não há arquivo).
+const isVercel = () => Boolean(process.env.VERCEL);
 
 if (existsSync(KEY_FILE)) {
   process.loadEnvFile(KEY_FILE);
-} else {
+} else if (!isVercel()) {
   console.warn(
     '[server] server/chave_api.env não encontrado. Copie server/chave_api.env.example para server/chave_api.env e preencha as chaves.'
   );

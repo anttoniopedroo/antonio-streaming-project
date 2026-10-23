@@ -64,9 +64,27 @@ Proteções da chave (também em `server/chave_api.env`):
 
 `server/chave_api.env` e `.env` estão no `.gitignore` e nunca devem ser enviados ao repositório.
 
+## Publicar na Vercel (quando decidir)
+
+O projeto já está preparado: `vercel.json` (rotas e cabeçalhos de segurança) e `api/index.js` (o back-end como função).
+
+1. Em vercel.com, importe o repositório do GitHub. A Vercel detecta o Vite sozinha.
+2. Em **Settings > Environment Variables**, cadastre as mesmas variáveis dos arquivos locais:
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` e, quando houver API, `API_BASE_URL`, `API_KEY` (e as demais `API_*`).
+3. Faça o deploy. Depois, confira `https://SEU-SITE.vercel.app/api/health`.
+
+Antes de publicar, rode `npm run preview:prod`: ele gera o build e serve com os mesmos cabeçalhos do `vercel.json`, para pegar problemas antes.
+
+Observações:
+- O limite de requisições do back-end fica na memória de cada instância. Na Vercel, para um limite global, use também as regras de Firewall do painel.
+- A configuração da Vercel foi testada localmente (`preview:prod`), não numa conta Vercel.
+
 ## Estrutura
 
 ```
+api/index.js             back-end como função da Vercel
+vercel.json              rotas e cabeçalhos de segurança na Vercel
+docs/                    tutorial em PDF da chave da API (e o gerador)
 server/app.js            rotas: login, catálogo, proxy da API
 server/auth.js           regras de acesso (ativo, expiração, troca de senha, registros)
 server/chave_api.env     chaves secretas (local, ignorado pelo git)

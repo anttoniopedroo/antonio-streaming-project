@@ -3,6 +3,14 @@
 Cada commit no GitHub sobe a versão (V1.2, V1.3, ...). A V2.0 será a versão com a API real conectada.
 A versão fica em um único lugar: `version` no `package.json`.
 
+## V1.5
+
+- Pronto para a Vercel (ainda não publicado):
+  - `api/index.js`: o mesmo back-end vira uma função da Vercel; `vercel.json` encaminha `/api/*` para ela.
+  - Cabeçalhos de segurança em todas as páginas: Content-Security-Policy estrita (só scripts/estilos/fontes do próprio site, conexões só com o Supabase), anti-clickjacking, HSTS, Referrer-Policy, Permissions-Policy. Cache longo para os arquivos com hash.
+  - `npm run preview:prod`: prévia local com os MESMOS cabeçalhos do `vercel.json`. Fluxo completo testado sem nenhuma violação de CSP.
+- Tutorial em PDF (`docs/Tutorial_Chave_API.pdf`) atualizado para o login, as proteções da chave e os erros novos (404 de caminho não permitido, 429). Gerador em `docs/gerar_tutorial.py` lê a versão do `package.json`.
+
 ## V1.4
 
 Segurança (referência: OWASP API Security Top 10 2023):
